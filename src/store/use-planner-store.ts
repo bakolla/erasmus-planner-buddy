@@ -77,7 +77,7 @@ export const usePlannerStore = create<PlannerState>()(
       addDocument: async (d) => {
         set({ status: "loading" });
         await delay();
-        set({ documents: [{ ...d, id: uid() }, ...get().documents], status: "success" });
+        set({ documents: [{ ...d, id: uid(), attachments: d.attachments ?? [] }, ...get().documents], status: "success" });
       },
       updateDocument: async (id, patch) => {
         await delay(150);

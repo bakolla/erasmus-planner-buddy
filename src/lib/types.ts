@@ -13,12 +13,21 @@ export interface Task {
 
 export type DocumentStatus = "todo" | "in_progress" | "ready";
 
+export interface DocumentAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl: string;
+}
+
 export interface DocumentItem {
   id: string;
   name: string;
   category: string;
   status: DocumentStatus;
   deadline: string;
+  attachments?: DocumentAttachment[];
 }
 
 export interface Expense {
