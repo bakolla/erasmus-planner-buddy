@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ListChecks, FileText, Wallet, CheckCircle2, CalendarClock, Plane, MapPin } from "lucide-react";
+import { ListChecks, FileText, Wallet, CheckCircle2, CalendarClock, Plane, MapPin, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,7 +43,20 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: React.ElementType;
 }
 
 function Index() {
-  const { tasks, documents, expenses, trip } = usePlannerStore();
+  const { tasks, documents, expenses, trip, user, isAuthLoading } = usePlannerStore();
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <OnboardingWizard />;
+  }
+
   const done = tasks.filter((t) => t.status === "done").length;
   const total = tasks.length;
   const progress = total ? Math.round((done / total) * 100) : 0;

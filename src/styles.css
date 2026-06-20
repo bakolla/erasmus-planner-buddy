@@ -143,3 +143,31 @@
     color: var(--color-foreground);
   }
 }
+
+/* High Contrast AAA WCAG theme */
+:root.high-contrast {
+  --background: oklch(0 0 0) !important;
+  --foreground: oklch(1 0 0) !important;
+  --card: oklch(0.05 0 0) !important;
+  --card-foreground: oklch(1 0 0) !important;
+  --popover: oklch(0.05 0 0) !important;
+  --popover-foreground: oklch(1 0 0) !important;
+  --primary: oklch(0.9 0.22 95) !important; /* Bright yellow */
+  --primary-foreground: oklch(0 0 0) !important; /* Black text */
+  --secondary: oklch(0.15 0 0) !important;
+  --secondary-foreground: oklch(1 0 0) !important;
+  --muted: oklch(0.1 0 0) !important;
+  --muted-foreground: oklch(0.9 0 0) !important;
+  --accent: oklch(0.2 0 0) !important;
+  --accent-foreground: oklch(1 0 0) !important;
+  --destructive: oklch(0.5 0.2 25) !important;
+  --destructive-foreground: oklch(1 0 0) !important;
+  --border: oklch(1 0 0) !important;
+  --input: oklch(0.1 0 0) !important;
+  --ring: oklch(0.9 0.22 95) !important;
+  --sidebar: oklch(0 0 0) !important;
+  --sidebar-foreground: oklch(1 0 0) !important;
+  --sidebar-primary: oklch(0.9 0.22 95) !important;
+  --sidebar-primary-foreground: oklch(0 0 0) !important;
+  --sidebar-border: oklch(1 0 0) !important;
+}

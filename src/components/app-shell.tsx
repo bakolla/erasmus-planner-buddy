@@ -8,21 +8,33 @@ import {
   Plane,
   Menu,
   X,
+  LogIn,
+  LogOut,
+  User,
+  Sliders,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-
-const nav = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/tasks", label: "Zadania", icon: ListChecks },
-  { to: "/documents", label: "Dokumenty", icon: FileText },
-  { to: "/budget", label: "Budżet", icon: Wallet },
-  { to: "/trip", label: "Wyjazd", icon: Plane },
-] as const;
+import { usePlannerStore } from "@/store/use-planner-store";
+import { useTranslation } from "@/lib/i18n";
+import { AuthModal } from "./auth-modal";
+import { UnlockModal } from "./unlock-modal";
+import { PersonalizationModal } from "./personalization-modal";
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { t } = useTranslation();
+
+  const nav = [
+    { to: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { to: "/tasks", label: t("nav.tasks"), icon: ListChecks },
+    { to: "/documents", label: t("nav.documents"), icon: FileText },
+    { to: "/budget", label: t("nav.budget"), icon: Wallet },
+    { to: "/trip", label: t("nav.trip"), icon: Plane },
+  ] as const;
+
   return (
     <nav aria-label="Główna nawigacja" className="flex flex-col gap-1 p-3">
       {nav.map(({ to, label, icon: Icon }) => {
@@ -50,7 +62,17 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SidebarInner() {
+interface SidebarInnerProps {
+  onOpenAuth: () => void;
+  onOpenPersonalization: () => void;
+}
+
+function SidebarInner({ onOpenAuth, onOpenPersonalization }: SidebarInnerProps) {
+  const { user, signOut, trip } = usePlannerStore();
+  const { t } = useTranslation();
+
+  const customLinks = trip?.customLinks || [];
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
@@ -63,8 +85,76 @@ function SidebarInner() {
         </div>
       </div>
       <NavList />
-      <div className="mt-auto p-4 text-xs text-sidebar-foreground/60">
-        <p>Powodzenia na wyjeździe! ✈️</p>
+
+      {/* Dynamic Important Links */}
+      {customLinks.length > 0 && (
+        <div className="px-5 py-2 border-t border-sidebar-border/30 mt-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-sidebar-foreground/40 mb-2 flex items-center gap-1.5">
+            <Link2 className="h-3 w-3" />
+            {t("nav.importantLinks")}
+          </p>
+          <ul className="space-y-1">
+            {customLinks.map((link) => (
+              <li key={link.id}>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-sidebar-foreground/80 hover:text-sidebar-primary transition-colors py-1 px-1 rounded hover:bg-sidebar-accent/50 truncate"
+                >
+                  <span className="truncate">{link.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      <div className="mt-auto p-4 border-t border-sidebar-border/30 space-y-2">
+        {/* Personalization Trigger */}
+        <Button
+          variant="outline"
+          className="w-full text-xs h-9 justify-center gap-2 bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border-sidebar-border"
+          onClick={onOpenPersonalization}
+        >
+          <Sliders className="h-4 w-4" />
+          {t("nav.personalization")}
+        </Button>
+
+        {/* User login / account info */}
+        {user ? (
+          <div className="flex items-center justify-between gap-2 p-1 pt-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-xs">
+                {user.email ? user.email[0].toUpperCase() : <User className="h-3.5 w-3.5" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-sidebar-foreground truncate" title={user.email || ""}>
+                  {user.email}
+                </p>
+                <p className="text-[10px] text-sidebar-foreground/50">{t("nav.synced")}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={signOut}
+              className="h-8 w-8 text-sidebar-foreground/50 hover:bg-destructive/20 hover:text-destructive-foreground shrink-0"
+              title={t("nav.logout")}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full text-xs h-9 justify-center gap-2 bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border-sidebar-border"
+            onClick={onOpenAuth}
+          >
+            <LogIn className="h-4 w-4" />
+            {t("nav.login")}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -72,14 +162,29 @@ function SidebarInner() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [personalizationOpen, setPersonalizationOpen] = useState(false);
+  const { authModalOpen, setAuthModalOpen } = usePlannerStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { t } = useTranslation();
+
+  const handleOpenAuth = () => setAuthModalOpen(true);
+  const handleOpenPersonalization = () => setPersonalizationOpen(true);
+
+  // Get active menu item title dynamically
+  const activeNavItem = [
+    { to: "/", label: t("nav.dashboard") },
+    { to: "/tasks", label: t("nav.tasks") },
+    { to: "/documents", label: t("nav.documents") },
+    { to: "/budget", label: t("nav.budget") },
+    { to: "/trip", label: t("nav.trip") },
+  ].find((n) => (n.to === "/" ? pathname === "/" : pathname.startsWith(n.to)));
 
   return (
     <div className="min-h-dvh flex bg-background">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64 lg:w-72 shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
         <div className="w-full sticky top-0 h-dvh">
-          <SidebarInner />
+          <SidebarInner onOpenAuth={handleOpenAuth} onOpenPersonalization={handleOpenPersonalization} />
         </div>
       </aside>
 
@@ -120,7 +225,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <SidebarInner />
+            <SidebarInner 
+              onOpenAuth={() => { setOpen(false); handleOpenAuth(); }} 
+              onOpenPersonalization={() => { setOpen(false); handleOpenPersonalization(); }}
+            />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -138,7 +246,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Menu className="h-5 w-5" />
           </Button>
           <h1 className="text-sm font-medium text-muted-foreground">
-            {nav.find((n) => (n.to === "/" ? pathname === "/" : pathname.startsWith(n.to)))?.label ?? "Erasmus Planner"}
+            {activeNavItem?.label ?? "Erasmus Planner"}
           </h1>
         </header>
 
@@ -153,6 +261,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </motion.div>
         </main>
       </div>
+
+      {/* Auth, Unlock & Personalization Modals */}
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <UnlockModal />
+      <PersonalizationModal open={personalizationOpen} onOpenChange={setPersonalizationOpen} />
     </div>
   );
 }
