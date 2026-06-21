@@ -144,6 +144,9 @@ export const usePlannerStore = create<PlannerState>()(
         const demoUser = { uid: "demo-user", email: "demo@erasmusbuddy.com" };
         set({ user: demoUser });
 
+        // Retrieve existing trip settings to preserve user's styling/personalization
+        const currentTrip = get().trip;
+
         // Populate store with beautiful seed/demo data
         set({
           tasks: seedTasks,
@@ -157,6 +160,18 @@ export const usePlannerStore = create<PlannerState>()(
             startDate: new Date().toISOString().split("T")[0],
             endDate: new Date(Date.now() + 150 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
             estimatedBudgetEUR: 3500,
+            themeColor: currentTrip?.themeColor || "indigo",
+            fontSize: currentTrip?.fontSize || "normal",
+            highContrast: currentTrip?.highContrast !== undefined ? currentTrip.highContrast : false,
+            language: currentTrip?.language || "pl",
+            darkMode: currentTrip?.darkMode !== undefined ? currentTrip.darkMode : false,
+            underlineLinks: currentTrip?.underlineLinks !== undefined ? currentTrip.underlineLinks : false,
+            dyslexiaFont: currentTrip?.dyslexiaFont !== undefined ? currentTrip.dyslexiaFont : false,
+            reducedMotion: currentTrip?.reducedMotion !== undefined ? currentTrip.reducedMotion : false,
+            textSpacing: currentTrip?.textSpacing !== undefined ? currentTrip.textSpacing : false,
+            grayscale: currentTrip?.grayscale !== undefined ? currentTrip.grayscale : false,
+            disableAmbient: currentTrip?.disableAmbient !== undefined ? currentTrip.disableAmbient : false,
+            customLinks: currentTrip?.customLinks || [],
           },
           credentials: [
             {
@@ -241,6 +256,7 @@ export const usePlannerStore = create<PlannerState>()(
           if (typeof window !== "undefined") {
             sessionStorage.setItem("master_key", "demo123");
           }
+          const currentTrip = get().trip;
           set({
             tasks: seedTasks,
             documents: seedDocuments,
@@ -253,6 +269,18 @@ export const usePlannerStore = create<PlannerState>()(
               startDate: new Date().toISOString().split("T")[0],
               endDate: new Date(Date.now() + 150 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
               estimatedBudgetEUR: 3500,
+              themeColor: currentTrip?.themeColor || "indigo",
+              fontSize: currentTrip?.fontSize || "normal",
+              highContrast: currentTrip?.highContrast !== undefined ? currentTrip.highContrast : false,
+              language: currentTrip?.language || "pl",
+              darkMode: currentTrip?.darkMode !== undefined ? currentTrip.darkMode : false,
+              underlineLinks: currentTrip?.underlineLinks !== undefined ? currentTrip.underlineLinks : false,
+              dyslexiaFont: currentTrip?.dyslexiaFont !== undefined ? currentTrip.dyslexiaFont : false,
+              reducedMotion: currentTrip?.reducedMotion !== undefined ? currentTrip.reducedMotion : false,
+              textSpacing: currentTrip?.textSpacing !== undefined ? currentTrip.textSpacing : false,
+              grayscale: currentTrip?.grayscale !== undefined ? currentTrip.grayscale : false,
+              disableAmbient: currentTrip?.disableAmbient !== undefined ? currentTrip.disableAmbient : false,
+              customLinks: currentTrip?.customLinks || [],
             },
             credentials: [
               {
