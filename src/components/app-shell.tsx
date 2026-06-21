@@ -17,6 +17,7 @@ import {
   Plus,
   Trash2,
   Loader2,
+  Compass,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
     { to: "/documents", label: t("nav.documents"), icon: FileText },
     { to: "/budget", label: t("nav.budget"), icon: Wallet },
     { to: "/trip", label: t("nav.trip"), icon: Plane },
+    { to: "/recommendations", label: t("nav.recommendations"), icon: Compass },
   ] as const;
 
   return (
@@ -292,6 +294,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/documents", label: t("nav.documents") },
     { to: "/budget", label: t("nav.budget") },
     { to: "/trip", label: t("nav.trip") },
+    { to: "/recommendations", label: t("nav.recommendations") },
   ].find((n) => (n.to === "/" ? pathname === "/" : pathname.startsWith(n.to)));
 
   return (

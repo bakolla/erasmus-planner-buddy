@@ -1,4 +1,4 @@
-import type { Task, DocumentItem, Expense, TripDetails } from "./types";
+import type { Task, DocumentItem, Expense, TripDetails, Recommendation } from "./types";
 
 export const seedTrip: TripDetails = {
   country: "Cypr",
@@ -38,4 +38,55 @@ export const seedExpenses: Expense[] = [
   { id: "e4", title: "Transport miejski", category: "Transport", amount: 50, currency: "EUR" },
   { id: "e5", title: "Jedzenie (tydzień)", category: "Jedzenie", amount: 250, currency: "EUR" },
   { id: "e6", title: "Ubezpieczenie", category: "Ubezpieczenie", amount: 180, currency: "EUR" },
+];
+
+export const seedRecommendations: Recommendation[] = [
+  {
+    id: "r1",
+    category: "attractions",
+    location: "Barcelona",
+    title: "Park Guell i Bunkers del Carmel",
+    description: "Wspaniale widoki na cale miasto, szczegolnie o zachodzie slonca. Wstep na bunkry jest darmowy, ale warto przyjsc wczesniej.",
+    recommendedBy: "kamil_barca"
+  },
+  {
+    id: "r2",
+    category: "attractions",
+    location: "Hiszpania",
+    title: "Tapas w Carrer de Blai",
+    description: "Ulica pelna barow pinchos w dzielnicy Poble Sec, gdzie jedno danie kosztuje 1-2 EUR. Idealne, studenckie ceny na kolacje ze znajomymi.",
+    recommendedBy: "ola_traveler"
+  },
+  {
+    id: "r3",
+    category: "housing",
+    location: "Barcelona",
+    title: "Pokoje studenckie w dzielnicy Gracia",
+    description: "Swietna, bezpieczna dzielnica z artystycznym klimatem i mnostwem placow z kawiarniami. Srednie ceny za pokoj to 450-550 EUR.",
+    recommendedBy: "admin_erasmus"
+  },
+  {
+    id: "r4",
+    category: "housing",
+    location: "Hiszpania",
+    title: "Residencia Universitaria Pere Felip Monlau",
+    description: "Akademik o wysokim standardzie blisko stacji metra Drassanes w Raval. Rezerwacje trzeba robic z bardzo duzym wyprzedzeniem.",
+    recommendedBy: "barcelona_bound"
+  },
+  {
+    id: "r5",
+    category: "attractions",
+    location: "Cypr",
+    title: "Plaza Nissi Beach w Ayia Napa",
+    description: "Jedna z najpiekniejszych plaz w Europie z turkusowa woda. Latwy dojazd autobusami Intercity z Nikozji.",
+    recommendedBy: "sun_student"
+  },
+  {
+    id: "r6",
+    category: "housing",
+    location: "Nicosia",
+    title: "Pokoje studenckie w dzielnicy Engomi",
+    description: "Dzielnica studencka blisko University of Nicosia. Mnostwo knajpek i akademiki od 300 EUR miesiecznie.",
+    recommendedBy: "paphos_fan"
+  }
 ];

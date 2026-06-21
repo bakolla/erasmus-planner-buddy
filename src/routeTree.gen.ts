@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TripRouteImport } from './routes/trip'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as RecommendationsRouteImport } from './routes/recommendations'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as CredentialsRouteImport } from './routes/credentials'
 import { Route as BudgetRouteImport } from './routes/budget'
@@ -24,6 +25,11 @@ const TripRoute = TripRouteImport.update({
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecommendationsRoute = RecommendationsRouteImport.update({
+  id: '/recommendations',
+  path: '/recommendations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/budget': typeof BudgetRoute
   '/credentials': typeof CredentialsRoute
   '/documents': typeof DocumentsRoute
+  '/recommendations': typeof RecommendationsRoute
   '/tasks': typeof TasksRoute
   '/trip': typeof TripRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/budget': typeof BudgetRoute
   '/credentials': typeof CredentialsRoute
   '/documents': typeof DocumentsRoute
+  '/recommendations': typeof RecommendationsRoute
   '/tasks': typeof TasksRoute
   '/trip': typeof TripRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/budget': typeof BudgetRoute
   '/credentials': typeof CredentialsRoute
   '/documents': typeof DocumentsRoute
+  '/recommendations': typeof RecommendationsRoute
   '/tasks': typeof TasksRoute
   '/trip': typeof TripRoute
 }
@@ -79,16 +88,25 @@ export interface FileRouteTypes {
     | '/budget'
     | '/credentials'
     | '/documents'
+    | '/recommendations'
     | '/tasks'
     | '/trip'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/budget' | '/credentials' | '/documents' | '/tasks' | '/trip'
+  to:
+    | '/'
+    | '/budget'
+    | '/credentials'
+    | '/documents'
+    | '/recommendations'
+    | '/tasks'
+    | '/trip'
   id:
     | '__root__'
     | '/'
     | '/budget'
     | '/credentials'
     | '/documents'
+    | '/recommendations'
     | '/tasks'
     | '/trip'
   fileRoutesById: FileRoutesById
@@ -98,6 +116,7 @@ export interface RootRouteChildren {
   BudgetRoute: typeof BudgetRoute
   CredentialsRoute: typeof CredentialsRoute
   DocumentsRoute: typeof DocumentsRoute
+  RecommendationsRoute: typeof RecommendationsRoute
   TasksRoute: typeof TasksRoute
   TripRoute: typeof TripRoute
 }
@@ -116,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recommendations': {
+      id: '/recommendations'
+      path: '/recommendations'
+      fullPath: '/recommendations'
+      preLoaderRoute: typeof RecommendationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -154,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetRoute: BudgetRoute,
   CredentialsRoute: CredentialsRoute,
   DocumentsRoute: DocumentsRoute,
+  RecommendationsRoute: RecommendationsRoute,
   TasksRoute: TasksRoute,
   TripRoute: TripRoute,
 }

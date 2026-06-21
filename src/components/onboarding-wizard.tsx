@@ -17,6 +17,7 @@ import {
   Building,
 } from "lucide-react";
 
+import { useNavigate } from "@tanstack/react-router";
 import { usePlannerStore } from "@/store/use-planner-store";
 import { db } from "@/lib/firebase";
 import type { DocumentItem, Expense, Task } from "@/lib/types";
@@ -79,6 +80,7 @@ interface OnboardingWizardProps {
 export function OnboardingWizard({ onBackToLogin }: OnboardingWizardProps) {
   const { signUp } = usePlannerStore();
   const { t, lang } = useTranslation();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -311,6 +313,7 @@ export function OnboardingWizard({ onBackToLogin }: OnboardingWizardProps) {
 
       // Final setUser triggers store reload
       await usePlannerStore.getState().setUser({ uid: userId, email });
+      navigate({ to: "/" });
     } catch (err: any) {
       console.error(err);
       let msg = lang === "pl" ? "Wystąpił błąd podczas zakładania profilu." : "An error occurred while creating the profile.";

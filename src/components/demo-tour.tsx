@@ -24,7 +24,8 @@ const TOUR_STEPS = [
   { step: 4, path: "/budget", titleKey: "tour.step4Title", descKey: "tour.step4Desc" },
   { step: 5, path: "/trip", titleKey: "tour.step5Title", descKey: "tour.step5Desc" },
   { step: 6, path: "/trip", titleKey: "tour.step6Title", descKey: "tour.step6Desc" },
-  { step: 7, path: "/", titleKey: "tour.step7Title", descKey: "tour.step7Desc" },
+  { step: 7, path: "/recommendations", titleKey: "tour.stepRecTitle", descKey: "tour.stepRecDesc" },
+  { step: 8, path: "/", titleKey: "tour.step7Title", descKey: "tour.step7Desc" },
 ] as const;
 
 export function DemoTour() {
@@ -42,6 +43,8 @@ export function DemoTour() {
     if (user?.uid === "demo-user") {
       const isFinished = sessionStorage.getItem("demo_tour_finished");
       if (!isFinished) {
+        setCurrentStep(1);
+        setIsMinimized(false);
         // Wait briefly for page load
         const timer = setTimeout(() => {
           setIsVisible(true);

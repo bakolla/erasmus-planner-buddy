@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Task, DocumentItem, Expense, TripDetails, AccountCredential } from "@/lib/types";
-import { seedTasks, seedDocuments, seedExpenses, seedTrip } from "@/lib/seed-data";
+import type { Task, DocumentItem, Expense, TripDetails, AccountCredential, Recommendation } from "@/lib/types";
+import { seedTasks, seedDocuments, seedExpenses, seedTrip, seedRecommendations } from "@/lib/seed-data";
 import { auth, db, storage, isFirebaseConfigured } from "@/lib/firebase";
 import { encryptText, decryptText, encryptFile } from "@/lib/encryption";
-import { saveLocalFile, deleteLocalFile } from "@/lib/local-files";
+import { saveLocalFile, deleteLocalFile, getLocalFile } from "@/lib/local-files";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -51,6 +51,7 @@ interface PlannerState {
   expenses: Expense[];
   trip: TripDetails;
   credentials: AccountCredential[];
+  recommendations: Recommendation[];
   status: Status;
   error: string | null;
 
@@ -89,6 +90,10 @@ interface PlannerState {
   // Trip
   updateTrip: (patch: Partial<TripDetails>) => Promise<void>;
 
+  // Recommendations
+  addRecommendation: (r: Omit<Recommendation, "id">) => Promise<void>;
+  toggleLikeRecommendation: (id: string) => Promise<void>;
+
   reset: () => void;
 }
 
@@ -113,6 +118,7 @@ export const usePlannerStore = create<PlannerState>()(
       expenses: seedExpenses,
       trip: seedTrip,
       credentials: [],
+      recommendations: seedRecommendations,
       status: "idle",
       error: null,
 
@@ -140,6 +146,7 @@ export const usePlannerStore = create<PlannerState>()(
       signInAsDemo: async () => {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("master_key", "demo123");
+          sessionStorage.removeItem("demo_tour_finished");
         }
         const demoUser = { uid: "demo-user", email: "demo@erasmusbuddy.com" };
         set({ user: demoUser });
@@ -152,6 +159,7 @@ export const usePlannerStore = create<PlannerState>()(
           tasks: seedTasks,
           documents: seedDocuments,
           expenses: seedExpenses,
+          recommendations: seedRecommendations,
           trip: {
             ...seedTrip,
             city: "Barcelona",
@@ -255,12 +263,14 @@ export const usePlannerStore = create<PlannerState>()(
         if (user && user.uid === "demo-user") {
           if (typeof window !== "undefined") {
             sessionStorage.setItem("master_key", "demo123");
+            sessionStorage.removeItem("demo_tour_finished");
           }
           const currentTrip = get().trip;
           set({
             tasks: seedTasks,
             documents: seedDocuments,
             expenses: seedExpenses,
+            recommendations: seedRecommendations,
             trip: {
               ...seedTrip,
               city: "Barcelona",
@@ -439,6 +449,24 @@ export const usePlannerStore = create<PlannerState>()(
               }
             }
 
+            // Fetch global recommendations
+            const recsSnap = await getDocs(collection(db, "recommendations"));
+            const recommendations: Recommendation[] = [];
+            recsSnap.forEach((d) => recommendations.push(d.data() as Recommendation));
+
+            if (recsSnap.empty) {
+              try {
+                const batch = writeBatch(db);
+                seedRecommendations.forEach((r) => {
+                  batch.set(doc(db, "recommendations", r.id), r);
+                });
+                await batch.commit();
+              } catch (recErr) {
+                console.error("Failed to seed recommendations to global Firestore:", recErr);
+              }
+              recommendations.push(...seedRecommendations);
+            }
+
             // Sync: if Firestore is completely empty for this user, upload the current local state
             if (tasksSnap.empty && docsSnap.empty && expensesSnap.empty && !tripDoc.exists() && credsSnap.empty) {
               const batch = writeBatch(db);
@@ -453,6 +481,7 @@ export const usePlannerStore = create<PlannerState>()(
               });
               batch.set(doc(db, "users", user.uid, "trip", "details"), get().trip);
               await batch.commit();
+              set({ recommendations });
             } else {
               // Otherwise, update Zustand store with Firestore values
               set({
@@ -463,6 +492,7 @@ export const usePlannerStore = create<PlannerState>()(
                 rawCredentials: rawCreds,
                 credentials: decryptedCreds,
                 isLocked: needsLock,
+                recommendations: recommendations.length > 0 ? recommendations : seedRecommendations,
               });
             }
             set({ isAuthLoading: false, status: "success" });
@@ -801,6 +831,52 @@ export const usePlannerStore = create<PlannerState>()(
         }
       },
 
+      addRecommendation: async (r) => {
+        set({ status: "loading", error: null });
+        try {
+          const recommendation: Recommendation = { ...r, id: uid(), likes: [] };
+          set({
+            recommendations: [recommendation, ...get().recommendations],
+            status: "success",
+          });
+
+          const userId = get().user?.uid;
+          if (db && userId && userId !== "demo-user") {
+            await setDoc(doc(db, "recommendations", recommendation.id), recommendation);
+          }
+        } catch (e) {
+          console.error("Error adding recommendation:", e);
+          set({ status: "error", error: "Nie udało się dodać polecenia" });
+        }
+      },
+
+      toggleLikeRecommendation: async (id) => {
+        const userId = get().user?.uid;
+        if (!userId) {
+          throw new Error("Musisz być zalogowany, aby polubić wpis");
+        }
+
+        const updatedRecommendations = get().recommendations.map((r) => {
+          if (r.id === id) {
+            const likes = r.likes || [];
+            const newLikes = likes.includes(userId)
+              ? likes.filter((uid) => uid !== userId)
+              : [...likes, userId];
+            return { ...r, likes: newLikes };
+          }
+          return r;
+        });
+
+        set({ recommendations: updatedRecommendations });
+
+        if (db && userId !== "demo-user") {
+          const rec = updatedRecommendations.find((r) => r.id === id);
+          if (rec) {
+            await setDoc(doc(db, "recommendations", id), rec);
+          }
+        }
+      },
+
       setAuthModalOpen: (open) => set({ authModalOpen: open }),
       setConfigModalOpen: (open) => set({ configModalOpen: open }),
 
@@ -829,6 +905,7 @@ export const usePlannerStore = create<PlannerState>()(
             disableAmbient: !!currentTrip?.disableAmbient,
           },
           credentials: [],
+          recommendations: seedRecommendations,
           status: "idle",
           error: null,
           authModalOpen: false,
@@ -843,6 +920,7 @@ export const usePlannerStore = create<PlannerState>()(
         documents: state.documents,
         expenses: state.expenses,
         trip: state.trip,
+        recommendations: state.recommendations,
       }),
     },
   ),

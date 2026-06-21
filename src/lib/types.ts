@@ -68,3 +68,16 @@ export interface AccountCredential {
   url?: string;        // Plaintext
   notes?: string;      // Encrypted (Base64)
 }
+
+export interface Recommendation {
+  id: string;
+  category: "attractions" | "housing";
+  location: string;
+  title: string;
+  description: string;
+  recommendedBy: string;
+  likes?: string[];
+  link?: string;
+  photoDataB64?: string;
+}
+
