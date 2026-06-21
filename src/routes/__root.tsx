@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/app-shell";
+import { auth } from "@/lib/firebase";
+import { usePlannerStore } from "@/store/use-planner-store";
 
 function NotFoundComponent() {
   return (
@@ -117,6 +119,119 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const setUser = usePlannerStore((s) => s.setUser);
+  const trip = usePlannerStore((s) => s.trip);
+
+  useEffect(() => {
+    if (!auth) {
+      setUser(null);
+      return;
+    }
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUser({ uid: user.uid, email: user.email });
+      } else {
+        const currentStoreUser = usePlannerStore.getState().user;
+        if (currentStoreUser?.uid !== "demo-user") {
+          setUser(null);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [setUser]);
+
+  useEffect(() => {
+    if (!trip) return;
+
+    // 1. Font size setting
+    const fontSizeMap = {
+      normal: "16px",
+      large: "18px",
+      xlarge: "20px",
+    };
+    const size = trip.fontSize || "normal";
+    document.documentElement.style.fontSize = fontSizeMap[size] || "16px";
+
+    // 2. High Contrast setting
+    if (trip.highContrast) {
+      document.documentElement.classList.add("high-contrast");
+    } else {
+      document.documentElement.classList.remove("high-contrast");
+    }
+
+    // 2b. Dark Mode setting
+    if (trip.darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    // 3. Theme color variables mapping
+    const themeColorMap = {
+      indigo: {
+        primary: "oklch(0.42 0.16 268)",
+        ring: "oklch(0.55 0.16 268)",
+      },
+      emerald: {
+        primary: "oklch(0.52 0.19 154)",
+        ring: "oklch(0.62 0.19 154)",
+      },
+      amber: {
+        primary: "oklch(0.64 0.18 75)",
+        ring: "oklch(0.74 0.18 75)",
+      },
+      rose: {
+        primary: "oklch(0.53 0.22 17)",
+        ring: "oklch(0.63 0.22 17)",
+      },
+      cyan: {
+        primary: "oklch(0.55 0.18 200)",
+        ring: "oklch(0.65 0.18 200)",
+      },
+    };
+    const theme = trip.themeColor || "indigo";
+    const colors = themeColorMap[theme] || themeColorMap.indigo;
+
+    document.documentElement.style.setProperty("--primary", colors.primary);
+    document.documentElement.style.setProperty("--ring", colors.ring);
+    document.documentElement.style.setProperty("--sidebar-primary", colors.primary);
+    document.documentElement.style.setProperty("--sidebar-primary-foreground", "oklch(0.984 0.003 247.858)");
+
+    // 3b. Accessibility settings toggles
+    if (trip.underlineLinks) {
+      document.documentElement.classList.add("underline-links");
+    } else {
+      document.documentElement.classList.remove("underline-links");
+    }
+
+    if (trip.dyslexiaFont) {
+      document.documentElement.classList.add("dyslexia-font");
+    } else {
+      document.documentElement.classList.remove("dyslexia-font");
+    }
+
+    if (trip.reducedMotion) {
+      document.documentElement.classList.add("reduced-motion");
+    } else {
+      document.documentElement.classList.remove("reduced-motion");
+    }
+
+    if (trip.textSpacing) {
+      document.documentElement.classList.add("text-spacing");
+    } else {
+      document.documentElement.classList.remove("text-spacing");
+    }
+
+    if (trip.grayscale) {
+      document.documentElement.classList.add("grayscale-mode");
+    } else {
+      document.documentElement.classList.remove("grayscale-mode");
+    }
+
+    // 4. Lang HTML attribute
+    const lang = trip.language || "pl";
+    document.documentElement.setAttribute("lang", lang);
+  }, [trip]);
 
   return (
     <QueryClientProvider client={queryClient}>

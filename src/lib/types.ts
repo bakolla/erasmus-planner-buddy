@@ -19,6 +19,11 @@ export interface DocumentItem {
   category: string;
   status: DocumentStatus;
   deadline: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  fileDataB64?: string;
 }
 
 export interface Expense {
@@ -27,6 +32,7 @@ export interface Expense {
   category: string;
   amount: number;
   currency: "PLN" | "EUR" | "USD";
+  isMonthly?: boolean;
 }
 
 export interface TripDetails {
@@ -39,4 +45,26 @@ export interface TripDetails {
   emergencyContact: string;
   accommodationAddress: string;
   estimatedBudgetEUR: number;
+  customLinks?: Array<{ id: string; title: string; url: string }>;
+  budgetCategories?: string[];
+  themeColor?: "indigo" | "emerald" | "amber" | "rose" | "cyan";
+  fontSize?: "normal" | "large" | "xlarge";
+  highContrast?: boolean;
+  language?: "pl" | "en";
+  darkMode?: boolean;
+  underlineLinks?: boolean;
+  dyslexiaFont?: boolean;
+  reducedMotion?: boolean;
+  textSpacing?: boolean;
+  grayscale?: boolean;
+  disableAmbient?: boolean;
+}
+
+export interface AccountCredential {
+  id: string;
+  title: string;       // Plaintext for user navigation
+  login: string;       // Encrypted (Base64)
+  password?: string;   // Encrypted (Base64)
+  url?: string;        // Plaintext
+  notes?: string;      // Encrypted (Base64)
 }

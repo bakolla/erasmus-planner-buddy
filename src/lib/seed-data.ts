@@ -10,6 +10,7 @@ export const seedTrip: TripDetails = {
   emergencyContact: "+48 600 700 800 (mama)",
   accommodationAddress: "Ledra Street 42, Nicosia, Cyprus",
   estimatedBudgetEUR: 3500,
+  disableAmbient: false,
 };
 
 export const seedTasks: Task[] = [

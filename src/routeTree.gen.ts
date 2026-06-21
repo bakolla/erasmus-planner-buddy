@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TripRouteImport } from './routes/trip'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as CredentialsRouteImport } from './routes/credentials'
 import { Route as BudgetRouteImport } from './routes/budget'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -30,6 +31,11 @@ const DocumentsRoute = DocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CredentialsRoute = CredentialsRouteImport.update({
+  id: '/credentials',
+  path: '/credentials',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BudgetRoute = BudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
@@ -44,6 +50,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/budget': typeof BudgetRoute
+  '/credentials': typeof CredentialsRoute
   '/documents': typeof DocumentsRoute
   '/tasks': typeof TasksRoute
   '/trip': typeof TripRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/budget': typeof BudgetRoute
+  '/credentials': typeof CredentialsRoute
   '/documents': typeof DocumentsRoute
   '/tasks': typeof TasksRoute
   '/trip': typeof TripRoute
@@ -59,21 +67,36 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/budget': typeof BudgetRoute
+  '/credentials': typeof CredentialsRoute
   '/documents': typeof DocumentsRoute
   '/tasks': typeof TasksRoute
   '/trip': typeof TripRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/budget' | '/documents' | '/tasks' | '/trip'
+  fullPaths:
+    | '/'
+    | '/budget'
+    | '/credentials'
+    | '/documents'
+    | '/tasks'
+    | '/trip'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/budget' | '/documents' | '/tasks' | '/trip'
-  id: '__root__' | '/' | '/budget' | '/documents' | '/tasks' | '/trip'
+  to: '/' | '/budget' | '/credentials' | '/documents' | '/tasks' | '/trip'
+  id:
+    | '__root__'
+    | '/'
+    | '/budget'
+    | '/credentials'
+    | '/documents'
+    | '/tasks'
+    | '/trip'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BudgetRoute: typeof BudgetRoute
+  CredentialsRoute: typeof CredentialsRoute
   DocumentsRoute: typeof DocumentsRoute
   TasksRoute: typeof TasksRoute
   TripRoute: typeof TripRoute
@@ -102,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/credentials': {
+      id: '/credentials'
+      path: '/credentials'
+      fullPath: '/credentials'
+      preLoaderRoute: typeof CredentialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/budget': {
       id: '/budget'
       path: '/budget'
@@ -122,6 +152,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BudgetRoute: BudgetRoute,
+  CredentialsRoute: CredentialsRoute,
   DocumentsRoute: DocumentsRoute,
   TasksRoute: TasksRoute,
   TripRoute: TripRoute,
@@ -129,3 +160,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

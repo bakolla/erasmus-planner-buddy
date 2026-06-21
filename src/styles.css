@@ -143,3 +143,119 @@
     color: var(--color-foreground);
   }
 }
+
+/* High Contrast AAA WCAG theme */
+:root.high-contrast {
+  --background: oklch(0 0 0) !important;
+  --foreground: oklch(1 0 0) !important;
+  --card: oklch(0.05 0 0) !important;
+  --card-foreground: oklch(1 0 0) !important;
+  --popover: oklch(0.05 0 0) !important;
+  --popover-foreground: oklch(1 0 0) !important;
+  --primary: oklch(0.9 0.22 95) !important; /* Bright yellow */
+  --primary-foreground: oklch(0 0 0) !important; /* Black text */
+  --secondary: oklch(0.15 0 0) !important;
+  --secondary-foreground: oklch(1 0 0) !important;
+  --muted: oklch(0.1 0 0) !important;
+  --muted-foreground: oklch(0.9 0 0) !important;
+  --accent: oklch(0.2 0 0) !important;
+  --accent-foreground: oklch(1 0 0) !important;
+  --destructive: oklch(0.5 0.2 25) !important;
+  --destructive-foreground: oklch(1 0 0) !important;
+  --border: oklch(1 0 0) !important;
+  --input: oklch(0.1 0 0) !important;
+  --ring: oklch(0.9 0.22 95) !important;
+  --sidebar: oklch(0 0 0) !important;
+  --sidebar-foreground: oklch(1 0 0) !important;
+  --sidebar-primary: oklch(0.9 0.22 95) !important;
+  --sidebar-primary-foreground: oklch(0 0 0) !important;
+  --sidebar-border: oklch(1 0 0) !important;
+}
+
+/* WCAG Accessibility Options */
+.underline-links a,
+.underline-links button:not([class*="bg-primary"]):not([class*="rounded-full"]) {
+  text-decoration: underline !important;
+}
+
+.dyslexia-font,
+.dyslexia-font * {
+  font-family: "OpenDyslexic", "Comic Sans MS", "Arial", sans-serif !important;
+}
+
+.reduced-motion,
+.reduced-motion * {
+  animation-delay: -1ms !important;
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  background-attachment: scroll !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+.text-spacing p,
+.text-spacing li,
+.text-spacing span,
+.text-spacing div:not([class*="grid"]):not([class*="flex"]) {
+  line-height: 1.8 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+
+.grayscale-mode {
+  filter: grayscale(100%) !important;
+}
+
+/* High Contrast overrides for translucent cards */
+:root.high-contrast .rounded-xl.border,
+:root.high-contrast [class*="bg-card"] {
+  background: var(--card) !important;
+  background-color: var(--card) !important;
+  backdrop-filter: none !important;
+  border-color: var(--border) !important;
+}
+
+/* Ambient background optimization: GPU accelerated animations */
+@keyframes float-blob-1 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(40px, -60px, 0) scale(1.12); }
+  66% { transform: translate3d(-20px, 30px, 0) scale(0.92); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes float-blob-2 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(-50px, 50px, 0) scale(0.92); }
+  66% { transform: translate3d(30px, -40px, 0) scale(1.12); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes float-blob-3 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(25px, 40px, 0) scale(1.06); }
+  66% { transform: translate3d(-25px, -50px, 0) scale(0.88); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.animate-blob-1 {
+  animation: float-blob-1 25s infinite ease-in-out;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.animate-blob-2 {
+  animation: float-blob-2 30s infinite ease-in-out;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.animate-blob-3 {
+  animation: float-blob-3 22s infinite ease-in-out;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
