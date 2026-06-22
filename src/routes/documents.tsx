@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,7 +60,16 @@ function DocumentsPage() {
   } = usePlannerStore();
   
   const { t, lang } = useTranslation();
+  const search = useSearch({ strict: false }) as any;
   const [mainTab, setMainTab] = useState<"list" | "la">("list");
+
+  useEffect(() => {
+    if (search && search.tab === "la") {
+      setMainTab("la");
+    } else if (search && search.tab === "list") {
+      setMainTab("list");
+    }
+  }, [search]);
   const [open, setOpen] = useState(false);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);

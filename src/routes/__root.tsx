@@ -95,6 +95,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      {
+        rel: "manifest",
+        href: "/manifest.json",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -121,6 +125,21 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const setUser = usePlannerStore((s) => s.setUser);
   const trip = usePlannerStore((s) => s.trip);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").then(
+          (registration) => {
+            console.log("ServiceWorker registration successful with scope: ", registration.scope);
+          },
+          (err) => {
+            console.log("ServiceWorker registration failed: ", err);
+          }
+        );
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!auth) {

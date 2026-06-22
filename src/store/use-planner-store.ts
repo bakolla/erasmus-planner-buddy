@@ -147,6 +147,7 @@ export const usePlannerStore = create<PlannerState>()(
         if (typeof window !== "undefined") {
           sessionStorage.setItem("master_key", "demo123");
           sessionStorage.removeItem("demo_tour_finished");
+          sessionStorage.removeItem("erasmus_pwa_dismissed");
         }
         const demoUser = { uid: "demo-user", email: "demo@erasmusbuddy.com" };
         set({ user: demoUser });
@@ -211,6 +212,7 @@ export const usePlannerStore = create<PlannerState>()(
         }
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("master_key");
+          sessionStorage.removeItem("erasmus_pwa_dismissed");
         }
         get().reset();
       },
@@ -264,6 +266,7 @@ export const usePlannerStore = create<PlannerState>()(
           if (typeof window !== "undefined") {
             sessionStorage.setItem("master_key", "demo123");
             sessionStorage.removeItem("demo_tour_finished");
+            sessionStorage.removeItem("erasmus_pwa_dismissed");
           }
           const currentTrip = get().trip;
           set({

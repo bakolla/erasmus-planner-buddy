@@ -18,14 +18,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const TOUR_STEPS = [
-  { step: 1, path: "/", titleKey: "tour.step1Title", descKey: "tour.step1Desc" },
-  { step: 2, path: "/tasks", titleKey: "tour.step2Title", descKey: "tour.step2Desc" },
-  { step: 3, path: "/documents", titleKey: "tour.step3Title", descKey: "tour.step3Desc" },
-  { step: 4, path: "/budget", titleKey: "tour.step4Title", descKey: "tour.step4Desc" },
-  { step: 5, path: "/trip", titleKey: "tour.step5Title", descKey: "tour.step5Desc" },
-  { step: 6, path: "/trip", titleKey: "tour.step6Title", descKey: "tour.step6Desc" },
-  { step: 7, path: "/recommendations", titleKey: "tour.stepRecTitle", descKey: "tour.stepRecDesc" },
-  { step: 8, path: "/", titleKey: "tour.step7Title", descKey: "tour.step7Desc" },
+  { step: 1, path: "/", search: {}, titleKey: "tour.step1Title", descKey: "tour.step1Desc" },
+  { step: 2, path: "/tasks", search: { tab: "tasks" }, titleKey: "tour.step2Title", descKey: "tour.step2Desc" },
+  { step: 3, path: "/tasks", search: { tab: "packing" }, titleKey: "tour.stepPackingTitle", descKey: "tour.stepPackingDesc" },
+  { step: 4, path: "/documents", search: { tab: "list" }, titleKey: "tour.step3Title", descKey: "tour.step3Desc" },
+  { step: 5, path: "/documents", search: { tab: "la" }, titleKey: "tour.stepLaTitle", descKey: "tour.stepLaDesc" },
+  { step: 6, path: "/budget", search: {}, titleKey: "tour.step4Title", descKey: "tour.step4Desc" },
+  { step: 7, path: "/trip", search: { tab: "details" }, titleKey: "tour.step5Title", descKey: "tour.step5Desc" },
+  { step: 8, path: "/trip", search: { tab: "rent" }, titleKey: "tour.stepRentTitle", descKey: "tour.stepRentDesc" },
+  { step: 9, path: "/trip", search: { tab: "emergency" }, titleKey: "tour.stepEmergencyTitle", descKey: "tour.stepEmergencyDesc" },
+  { step: 10, path: "/recommendations", search: {}, titleKey: "tour.stepRecTitle", descKey: "tour.stepRecDesc" },
+  { step: 11, path: "/", search: { tour: "accessibility" }, titleKey: "tour.step6Title", descKey: "tour.step6Desc" },
+  { step: 12, path: "/", search: { tour: "pwa" }, titleKey: "tour.stepPwaTitle", descKey: "tour.stepPwaDesc" },
+  { step: 13, path: "/", search: {}, titleKey: "tour.step7Title", descKey: "tour.step7Desc" },
 ] as const;
 
 export function DemoTour() {
@@ -81,7 +86,7 @@ export function DemoTour() {
     if (currentStep < TOUR_STEPS.length) {
       const nextStepObj = TOUR_STEPS[currentStep];
       setCurrentStep(currentStep + 1);
-      navigate({ to: nextStepObj.path });
+      navigate({ to: nextStepObj.path as any, search: nextStepObj.search as any });
     } else {
       handleClose();
     }
@@ -91,7 +96,7 @@ export function DemoTour() {
     if (currentStep > 1) {
       const prevStepObj = TOUR_STEPS[currentStep - 2];
       setCurrentStep(currentStep - 1);
-      navigate({ to: prevStepObj.path });
+      navigate({ to: prevStepObj.path as any, search: prevStepObj.search as any });
     }
   };
 

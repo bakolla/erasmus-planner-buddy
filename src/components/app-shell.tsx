@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useState, useEffect, type ReactNode } from "react";
+import { Link, useRouterState, useSearch } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   ListChecks,
@@ -18,6 +18,8 @@ import {
   Trash2,
   Loader2,
   Compass,
+  Smartphone,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -79,6 +81,72 @@ interface SidebarInnerProps {
 function SidebarInner({ onOpenAuth }: SidebarInnerProps) {
   const { user, signOut, trip, updateTrip } = usePlannerStore();
   const { t, lang } = useTranslation();
+  const search = useSearch({ strict: false }) as any;
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches 
+      || (navigator as any).standalone;
+
+    const isDemo = user?.uid === "demo-user";
+    const isDismissed = isDemo
+      ? sessionStorage.getItem("erasmus_pwa_dismissed") === "true"
+      : localStorage.getItem("erasmus_pwa_dismissed") === "true";
+
+    // If it's standalone and NOT demo, or if dismissed, hide it
+    if ((isStandalone && !isDemo) || isDismissed) {
+      setShowInstallBanner(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    // Show by default for visibility/demo, will fallback gracefully on click
+    setShowInstallBanner(true);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, [user]);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
+      if (outcome === "accepted") {
+        toast.success(t("tasks.pwaSuccess"));
+      }
+    } else {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        toast.info(t("tasks.pwaIosInstructions"), { duration: 6000 });
+      } else {
+        toast.info(t("tasks.pwaBrowserInstructions"), { duration: 6000 });
+      }
+    }
+  };
+
+  const handleDismiss = () => {
+    setShowInstallBanner(false);
+    const isDemo = user?.uid === "demo-user";
+    if (isDemo) {
+      sessionStorage.setItem("erasmus_pwa_dismissed", "true");
+    } else {
+      localStorage.setItem("erasmus_pwa_dismissed", "true");
+    }
+  };
 
   const [showAddLink, setShowAddLink] = useState(false);
   const [linkTitle, setLinkTitle] = useState("");
@@ -217,7 +285,43 @@ function SidebarInner({ onOpenAuth }: SidebarInnerProps) {
           </form>
         )}
       </div>
-      
+      {/* PWA Install Banner */}
+      {showInstallBanner && (
+        <div className={`mx-4 my-2 p-4 rounded-xl relative overflow-hidden transition-all duration-300 border ${
+          search && search.tour === "pwa"
+            ? "border-primary ring-2 ring-primary ring-offset-2 shadow-primary/20 shadow-2xl bg-sidebar-accent/80 animate-pulse"
+            : "bg-sidebar-accent/40 border-sidebar-border/50"
+        }`}>
+          <button
+            onClick={handleDismiss}
+            className="absolute top-3 right-3 text-sidebar-foreground/45 hover:text-sidebar-foreground transition-colors cursor-pointer"
+            aria-label={lang === "pl" ? "Zamknij" : "Dismiss"}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary/20 text-sidebar-primary mb-3">
+            <Smartphone className="h-5 w-5" />
+          </div>
+
+          <h5 className="text-xs font-bold tracking-wider text-sidebar-primary uppercase mb-1.5">
+            {t("tasks.pwaTitle")}
+          </h5>
+          <p className="text-[11px] text-sidebar-foreground/75 leading-normal mb-3">
+            {t("tasks.pwaDesc")}
+          </p>
+
+          <Button
+            size="sm"
+            onClick={handleInstallClick}
+            className="w-full text-xs font-semibold bg-sidebar-primary text-sidebar-primary-foreground hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 h-8"
+          >
+            <Download className="h-3.5 w-3.5" />
+            {t("tasks.pwaInstall")}
+          </Button>
+        </div>
+      )}
+
       <div className="mt-auto p-4 border-t border-sidebar-border/30 space-y-2">
         {/* User login / account info */}
         {user ? (

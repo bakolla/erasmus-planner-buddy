@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,8 +50,19 @@ const getDuration = (startStr: string, endStr: string, t: any) => {
 function TripPage() {
   const { trip, updateTrip } = usePlannerStore();
   const { t, lang } = useTranslation();
+  const search = useSearch({ strict: false }) as any;
 
   const [mainTab, setMainTab] = useState<"details" | "rent" | "emergency">("details");
+
+  useEffect(() => {
+    if (search && search.tab === "rent") {
+      setMainTab("rent");
+    } else if (search && search.tab === "emergency") {
+      setMainTab("emergency");
+    } else if (search && search.tab === "details") {
+      setMainTab("details");
+    }
+  }, [search]);
   const [activeSection, setActiveSection] = useState<SectionType | null>(null);
 
   // Form schemas based on section

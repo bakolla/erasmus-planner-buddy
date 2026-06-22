@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, Briefcase } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Briefcase, FileText, FileCode, Printer, Copy, Share2 } from "lucide-react";
 
 import { usePlannerStore } from "@/store/use-planner-store";
 import type { Priority, TaskStatus, Task } from "@/lib/types";
@@ -121,11 +121,20 @@ function TaskForm({
 
 function TasksPage() {
   const { tasks, addTask, updateTask, deleteTask, toggleTask, status } = usePlannerStore();
+  const search = useSearch({ strict: false }) as any;
   const [mainTab, setMainTab] = useState<"tasks" | "packing">("tasks");
   const [filter, setFilter] = useState<"all" | "active" | "done">("all");
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const { t, lang } = useTranslation();
+
+  useEffect(() => {
+    if (search && search.tab === "packing") {
+      setMainTab("packing");
+    } else if (search && search.tab === "tasks") {
+      setMainTab("tasks");
+    }
+  }, [search]);
 
   const filtered = tasks.filter((t) =>
     filter === "all" ? true : filter === "done" ? t.status === "done" : t.status !== "done",
@@ -355,6 +364,13 @@ function PackingAssistant() {
 
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemCategory, setNewItemCategory] = useState("misc");
+  const [isShareSupported, setIsShareSupported] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      setIsShareSupported(true);
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("erasmus_packing_list", JSON.stringify(items));
@@ -431,6 +447,160 @@ function PackingAssistant() {
   const handleReset = () => {
     setItems([]);
     localStorage.removeItem("erasmus_packing_list");
+  };
+
+  const downloadFile = (content: string, filename: string, contentType: string) => {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const getFormattedListText = () => {
+    let text = lang === "pl" ? `LISTA PAKOWANIA ERASMUS\n` : `ERASMUS PACKING LIST\n`;
+    text += `=========================================\n`;
+    text += `${lang === "pl" ? "Postęp" : "Progress"}: ${packedItems} / ${totalItems} (${progress}%)\n\n`;
+
+    categories.forEach((cat) => {
+      const catItems = items.filter((i) => i.category === cat.key);
+      if (catItems.length === 0) return;
+
+      text += `[ ${cat.label.toUpperCase()} ]\n`;
+      catItems.forEach((item) => {
+        text += `${item.packed ? "[x]" : "[ ]"} ${item.title}\n`;
+      });
+      text += `\n`;
+    });
+    return text.trim();
+  };
+
+  const copyToClipboard = () => {
+    const text = getFormattedListText();
+    navigator.clipboard.writeText(text);
+    toast.success(t("tasks.packingExportSuccessCopy"));
+  };
+
+  const handleShare = async () => {
+    const text = getFormattedListText();
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: lang === "pl" ? "Lista pakowania Erasmus" : "Erasmus Packing List",
+          text: text,
+        });
+        toast.success(t("tasks.packingExportSuccessShare"));
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          toast.error(t("tasks.packingExportShareErr"));
+        }
+      }
+    }
+  };
+
+  const exportAsTxt = () => {
+    let text = `=========================================\n`;
+    text += lang === "pl" ? `LISTA PAKOWANIA ERASMUS\n` : `ERASMUS PACKING LIST\n`;
+    text += `=========================================\n`;
+    text += `${lang === "pl" ? "Postęp" : "Progress"}: ${packedItems} / ${totalItems} (${progress}%)\n\n`;
+
+    categories.forEach((cat) => {
+      const catItems = items.filter((i) => i.category === cat.key);
+      if (catItems.length === 0) return;
+
+      text += `[ ${cat.label.toUpperCase()} ]\n`;
+      catItems.forEach((item) => {
+        text += `${item.packed ? "[x]" : "[ ]"} ${item.title}\n`;
+      });
+      text += `\n`;
+    });
+
+    downloadFile(text, "erasmus_packing_list.txt", "text/plain;charset=utf-8");
+    toast.success(t("tasks.packingExportSuccessTxt"));
+  };
+
+  const exportAsMarkdown = () => {
+    let md = `# ${lang === "pl" ? "Lista pakowania Erasmus" : "Erasmus Packing List"}\n\n`;
+    md += `**${lang === "pl" ? "Postęp" : "Progress"}:** ${packedItems} / ${totalItems} (${progress}%)\n\n`;
+
+    categories.forEach((cat) => {
+      const catItems = items.filter((i) => i.category === cat.key);
+      if (catItems.length === 0) return;
+
+      md += `## ${cat.label}\n`;
+      catItems.forEach((item) => {
+        md += `- [${item.packed ? "x" : " "}] ${item.title}\n`;
+      });
+      md += `\n`;
+    });
+
+    downloadFile(md, "erasmus_packing_list.md", "text/markdown;charset=utf-8");
+    toast.success(t("tasks.packingExportSuccessMd"));
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error(t("tasks.packingExportPrintErr"));
+      return;
+    }
+
+    const content = `
+      <html>
+        <head>
+          <title>${lang === "pl" ? "Lista pakowania - Erasmus Planner" : "Packing List - Erasmus Planner"}</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #333; }
+            h1 { margin-bottom: 5px; color: #111; font-size: 24px; }
+            p.subtitle { margin-top: 0; margin-bottom: 25px; color: #666; font-size: 14px; }
+            .category { margin-top: 25px; page-break-inside: avoid; }
+            .category-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; color: #0284c7; }
+            ul { list-style: none; padding-left: 0; }
+            li { margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; }
+            .checkbox { width: 16px; height: 16px; border: 1px solid #999; margin-right: 10px; display: inline-block; text-align: center; line-height: 14px; font-size: 12px; font-weight: bold; }
+            .checked { text-decoration: line-through; color: #888; }
+            .progress { margin-bottom: 20px; font-size: 14px; font-weight: 500; }
+          </style>
+        </head>
+        <body>
+          <h1>${lang === "pl" ? "Lista pakowania Erasmus" : "Erasmus Packing List"}</h1>
+          <p class="subtitle">${lang === "pl" ? "Asystent pakowania — Erasmus Planner Buddy" : "Packing Assistant — Erasmus Planner Buddy"}</p>
+          <div class="progress">
+            ${lang === "pl" ? "Zapakowano" : "Packed"}: ${packedItems} / ${totalItems} (${progress}%)
+          </div>
+          \${categories.map(cat => {
+            const catItems = items.filter(i => i.category === cat.key);
+            if (catItems.length === 0) return "";
+            return \`
+              <div class="category">
+                <div class="category-title">\${cat.label}</div>
+                <ul>
+                  \${catItems.map(item => \`
+                    <li class="\${item.packed ? 'checked' : ''}">
+                      <span class="checkbox">\${item.packed ? '✓' : '&nbsp;&nbsp;'}</span>
+                      \${item.title}
+                    </li>
+                  \`).join("")}
+                </ul>
+              </div>
+            \`;
+          }).join("")}
+          <script>
+            window.onload = function() {
+              window.print();
+              window.close();
+            }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
   };
 
   const categories = [
@@ -539,6 +709,36 @@ function PackingAssistant() {
                     <Plus className="h-3.5 w-3.5 mr-1" /> {lang === "pl" ? "Dodaj" : "Add"}
                   </Button>
                 </form>
+
+                <hr className="border-border/30" />
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("tasks.packingExport")}</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    <Button variant="outline" size="sm" onClick={copyToClipboard} className="w-full text-xs cursor-pointer justify-start">
+                      <Copy className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                      {t("tasks.packingExportCopy")}
+                    </Button>
+                    {isShareSupported && (
+                      <Button variant="outline" size="sm" onClick={handleShare} className="w-full text-xs cursor-pointer justify-start">
+                        <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                        {t("tasks.packingExportShare")}
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={handlePrint} className="w-full text-xs cursor-pointer justify-start">
+                      <Printer className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                      {t("tasks.packingExportPdf")}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={exportAsTxt} className="w-full text-xs cursor-pointer justify-start">
+                      <FileText className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                      {t("tasks.packingExportTxt")}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={exportAsMarkdown} className="w-full text-xs cursor-pointer justify-start">
+                      <FileCode className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                      {t("tasks.packingExportMd")}
+                    </Button>
+                  </div>
+                </div>
 
                 <hr className="border-border/30" />
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   Sparkles,
@@ -32,10 +33,17 @@ const THEME_COLORS = [
 ] as const;
 
 export function AccessibilityWidget() {
+  const search = useSearch({ strict: false }) as any;
   const [isOpen, setIsOpen] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
   const { trip, updateTrip } = usePlannerStore();
   const { t, lang } = useTranslation();
+
+  useEffect(() => {
+    if (search && search.tour === "accessibility") {
+      setIsOpen(true);
+    }
+  }, [search]);
 
   // Close when clicking outside
   useEffect(() => {
@@ -148,7 +156,11 @@ export function AccessibilityWidget() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 w-80 bg-background/95 border border-border shadow-2xl rounded-2xl p-5 text-foreground backdrop-blur-md focus-visible:outline-none"
+            className={`mb-4 w-80 bg-background/95 border shadow-2xl rounded-2xl p-5 text-foreground backdrop-blur-md focus-visible:outline-none transition-all duration-300 ${
+              search && search.tour === "accessibility"
+                ? "border-primary ring-2 ring-primary ring-offset-2 shadow-primary/20 shadow-2xl animate-pulse"
+                : "border-border"
+            }`}
             role="dialog"
             aria-label={t("settings.title")}
           >
@@ -418,7 +430,11 @@ export function AccessibilityWidget() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border border-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        className={`h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border border-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          search && search.tour === "accessibility"
+            ? "ring-4 ring-primary ring-offset-2 animate-bounce"
+            : ""
+        }`}
         title={t("settings.title")}
         aria-label={t("settings.title")}
         aria-expanded={isOpen}
