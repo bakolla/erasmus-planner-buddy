@@ -94,8 +94,10 @@ jobs:
         env:
           GITHUB_ACTIONS: "true"
 
-      - name: Create 404 Fallback Page
-        run: cp .output/public/index.html .output/public/404.html
+      - name: Create index.html and 404.html from _shell.html
+        run: |
+          cp dist/client/_shell.html dist/client/index.html
+          cp dist/client/_shell.html dist/client/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -103,7 +105,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .output/public
+          path: dist/client
 
       - name: Deploy to GitHub Pages
         id: deployment
