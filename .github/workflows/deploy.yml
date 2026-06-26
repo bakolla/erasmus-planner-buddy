@@ -34,7 +34,7 @@ jobs:
               const pkg = require('./package.json');
               const version = pkg.engines?.node;
               if (version) {
-                const match = version.match(/\d+(\.\d+)*/)/g;
+                const match = version.match(/\d+(\.\d+)*/);
                 console.log(match ? match[0] : '20');
               } else {
                 console.log('20');
@@ -46,10 +46,10 @@ jobs:
           echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
 
           # Package manager detection
-          if [ -f "bun.lock" ]; then
-            echo "pkg-manager=bun" >> $GITHUB_OUTPUT
-            echo "install-cmd=bun install" >> $GITHUB_OUTPUT
-            echo "build-cmd=bun run build" >> $GITHUB_OUTPUT
+          if [ -f "package-lock.json" ]; then
+            echo "pkg-manager=npm" >> $GITHUB_OUTPUT
+            echo "install-cmd=npm ci --legacy-peer-deps" >> $GITHUB_OUTPUT
+            echo "build-cmd=npm run build" >> $GITHUB_OUTPUT
           elif [ -f "pnpm-lock.yaml" ]; then
             echo "pkg-manager=pnpm" >> $GITHUB_OUTPUT
             echo "install-cmd=pnpm install --frozen-lockfile" >> $GITHUB_OUTPUT
@@ -58,9 +58,13 @@ jobs:
             echo "pkg-manager=yarn" >> $GITHUB_OUTPUT
             echo "install-cmd=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
             echo "build-cmd=yarn run build" >> $GITHUB_OUTPUT
+          elif [ -f "bun.lock" ]; then
+            echo "pkg-manager=bun" >> $GITHUB_OUTPUT
+            echo "install-cmd=bun install" >> $GITHUB_OUTPUT
+            echo "build-cmd=bun run build" >> $GITHUB_OUTPUT
           else
             echo "pkg-manager=npm" >> $GITHUB_OUTPUT
-            echo "install-cmd=npm ci --legacy-peer-deps" >> $GITHUB_OUTPUT
+            echo "install-cmd=npm install --legacy-peer-deps" >> $GITHUB_OUTPUT
             echo "build-cmd=npm run build" >> $GITHUB_OUTPUT
           fi
 
