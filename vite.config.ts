@@ -11,5 +11,29 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    prerender: {
+      enabled: true,
+    },
+  },
+  nitro: {
+    preset: "static",
+    baseURL: process.env.GITHUB_ACTIONS ? "/erasmus-planner-buddy/" : "/",
+  },
+  vite: {
+    base: process.env.GITHUB_ACTIONS ? "/erasmus-planner-buddy/" : "/",
+    build: {
+      rollupOptions: {
+        input: "src/start.ts",
+      },
+    },
+    environments: {
+      ssr: {
+        build: {
+          rollupOptions: {
+            input: "src/server.ts",
+          },
+        },
+      },
+    },
   },
 });

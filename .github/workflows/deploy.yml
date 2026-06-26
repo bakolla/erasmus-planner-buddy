@@ -1,0 +1,106 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect Package Manager & Node Version
+        id: detect
+        run: |
+          # Node version detection
+          NODE_VERSION=$(node -e "
+            try {
+              const pkg = require('./package.json');
+              const version = pkg.engines?.node;
+              if (version) {
+                const match = version.match(/\d+(\.\d+)*/)/g;
+                console.log(match ? match[0] : '20');
+              } else {
+                console.log('20');
+              }
+            } catch (e) {
+              console.log('20');
+            }
+          ")
+          echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
+
+          # Package manager detection
+          if [ -f "bun.lock" ]; then
+            echo "pkg-manager=bun" >> $GITHUB_OUTPUT
+            echo "install-cmd=bun install" >> $GITHUB_OUTPUT
+            echo "build-cmd=bun run build" >> $GITHUB_OUTPUT
+          elif [ -f "pnpm-lock.yaml" ]; then
+            echo "pkg-manager=pnpm" >> $GITHUB_OUTPUT
+            echo "install-cmd=pnpm install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build-cmd=pnpm run build" >> $GITHUB_OUTPUT
+          elif [ -f "yarn.lock" ]; then
+            echo "pkg-manager=yarn" >> $GITHUB_OUTPUT
+            echo "install-cmd=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build-cmd=yarn run build" >> $GITHUB_OUTPUT
+          else
+            echo "pkg-manager=npm" >> $GITHUB_OUTPUT
+            echo "install-cmd=npm ci --legacy-peer-deps" >> $GITHUB_OUTPUT
+            echo "build-cmd=npm run build" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Bun
+        if: steps.detect.outputs.pkg-manager == 'bun'
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup pnpm
+        if: steps.detect.outputs.pkg-manager == 'pnpm'
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.detect.outputs.node-version }}
+          cache: ${{ steps.detect.outputs.pkg-manager != 'bun' && steps.detect.outputs.pkg-manager || '' }}
+
+      - name: Install dependencies
+        run: ${{ steps.detect.outputs.install-cmd }}
+
+      - name: Build project
+        run: ${{ steps.detect.outputs.build-cmd }}
+        env:
+          GITHUB_ACTIONS: "true"
+
+      - name: Create 404 Fallback Page
+        run: cp .output/public/index.html .output/public/404.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .output/public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
